@@ -40,26 +40,27 @@ module ActiveMerchant #:nodoc:
       end 
       
       def pay(options)
-        commit('Pay', build_adaptive_payment_pay_request(options))
+        commit 'Pay', build_adaptive_payment_pay_request(options)
       end                       
     
       def details_for_payment options
-        commit('PaymentDetails', build_adaptive_payment_details_request(options))
+        commit 'PaymentDetails', build_adaptive_payment_details_request(options)
       end
       
       def refund options
-        commit('Refund', build_adaptive_refund_details(options))
+        commit 'Refund', build_adaptive_refund_details(options)
       end
       
       def preapprove_payment options
-        commit('Preapproval', build_preapproval_payment(options))
+        commit 'Preapproval', build_preapproval_payment(options)
       end
       
       def preapproval_details_for options
-        commit('PreapprovalDetails', build_preapproval_details(options))
+        commit 'PreapprovalDetails', build_preapproval_details(options)
       end
       
       def convert_currency  options
+        commit 'ConvertCurrency', build_currency_conversion(options)
       end
       
       #debug method, provides a 
@@ -194,7 +195,7 @@ module ActiveMerchant #:nodoc:
         @xml = ''
         xml = Builder::XmlMarkup.new :target => @xml, :indent => 2
         xml.instruct!
-        xml.PayRequest do |x|
+        xml.ConvertCurrencyRequest do |x|
           x.requestEnvelope do |x|
             x.detailLevel 'ReturnAll'
             x.errorLanguage opts[:error_language] ||= 'en_US'
