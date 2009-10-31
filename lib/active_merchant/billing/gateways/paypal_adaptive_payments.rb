@@ -11,7 +11,7 @@ require dir + '/paypal_adaptive_payments/adaptive_payment_response.rb'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
-    class PaypalAdaptivePaymentGateway < Gateway # :nodoc
+    class PaypalAdaptivePaymentGateway < Gateway # :nodoc:
       
       include AdaptivePaymentResponses
       
