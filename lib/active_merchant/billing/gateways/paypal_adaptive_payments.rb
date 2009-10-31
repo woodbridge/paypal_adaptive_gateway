@@ -55,8 +55,11 @@ module ActiveMerchant #:nodoc:
         commit('Preapproval', build_preapproval_payment(options))
       end
       
-      def preapproval_details_for
+      def preapproval_details_for options
         commit('PreapprovalDetails', build_preapproval_details(options))
+      end
+      
+      def convert_currency  options
       end
       
       #debug method, provides a 
