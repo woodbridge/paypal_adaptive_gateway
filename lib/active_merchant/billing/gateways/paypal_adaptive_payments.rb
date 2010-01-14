@@ -1,10 +1,3 @@
-=begin
-**************************
-
-
-**************************
-=end
-
 dir = File.dirname(__FILE__)
 require dir + '/paypal_adaptive_payments/exceptions.rb'
 require dir + '/paypal_adaptive_payments/adaptive_payment_response.rb'
@@ -63,7 +56,7 @@ module ActiveMerchant #:nodoc:
         commit 'ConvertCurrency', build_currency_conversion(options)
       end
       
-      #debug method, provides a 
+      #debug method, provides an easy to use debug method for the class
       def debug
         "Url: #{@url}\n\n JSON: #{@xml} \n\n Raw: #{@raw}"
       end
@@ -85,19 +78,23 @@ module ActiveMerchant #:nodoc:
             x.detailLevel 'ReturnAll'
             x.errorLanguage opts[:error_language] ||= 'en_US'
           end
-          x.clientDetails do |x|
-            x.applicationId @config[:appid]
-          end
           x.actionType 'PAY'
           x.cancelUrl opts[:cancel_url]
           x.returnUrl opts[:return_url]
+          if opts[:notify_url]
+            x.ipnNotificationUrl opts[:notify_url]
+          end
+          x.memo opts[:memo] if opts[:memo]
+          x.pin opts[:pin] if opts[:pin]
           x.currencyCode opts[:currency_code] ||= 'USD'
           x.receiverList do |x|
             opts[:receiver_list].each do |receiver|
               x.receiver do |x|
-                x.amount receiver[:amount]
-                x.primary receiver[:primary] ||= false
                 x.email receiver[:email]
+                x.amount receiver[:amount]
+                x.primary receiver[:primary] if receiver[:primary]
+                x.paymentType receiver[:payment_type] ||= 'GOODS'
+                x.invoiceId receiver[:invoice_id] if receiver[:invoice_id]
               end
             end
           end
@@ -114,9 +111,6 @@ module ActiveMerchant #:nodoc:
             x.detailLevel 'ReturnAll'
             x.errorLanguage opts[:error_language] ||= 'en_US'
           end
-          x.clientDetails do |x|
-            x.applicationId @config[:appid]
-          end
           x.payKey opts[:paykey]
         end
       end
@@ -129,9 +123,6 @@ module ActiveMerchant #:nodoc:
           x.requestEnvelope do |x|
             x.detailLevel 'ReturnAll'
             x.errorLanguage options[:error_language] ||= 'en_US'
-          end
-          x.clientDetails do |x|
-            x.applicationId @config[:appid]
           end
           x.actionType 'REFUND'
           if options[:pay_key]
@@ -150,8 +141,10 @@ module ActiveMerchant #:nodoc:
             options[:receiver_list].each do |receiver|
               x.receiver do |x|
                 x.amount receiver[:amount]
-                x.primary receiver[:primary] ||= false
+                x.paymentType receiver[:payment_type] ||= 'GOODS'
+                x.invoiceId receiver[:invoice_id] if receiver[:invoice_id]
                 x.email receiver[:email]
+                
               end
             end
           end
@@ -168,9 +161,6 @@ module ActiveMerchant #:nodoc:
             x.detailLevel 'ReturnAll'
             x.errorLanguage opts[:error_language] ||= 'en_US'
           end
-          x.clientDetails do |x|
-            x.applicationId @config[:appid]
-          end
         end
       end
       
@@ -185,9 +175,6 @@ module ActiveMerchant #:nodoc:
           end
           x.preapprovalKey options[:preapproval_key]
           x.getBillingAddress options[:get_billing_address] if options[:get_billing_address]
-          x.clientDetails do |x|
-            x.applicationId @config[:appid]
-          end
         end
       end
       
@@ -199,9 +186,6 @@ module ActiveMerchant #:nodoc:
           x.requestEnvelope do |x|
             x.detailLevel 'ReturnAll'
             x.errorLanguage opts[:error_language] ||= 'en_US'
-          end
-          x.clientDetails do |x|
-            x.applicationId @config[:appid]
           end
           x.baseAmountList do |x|
             x.currency do |x|
