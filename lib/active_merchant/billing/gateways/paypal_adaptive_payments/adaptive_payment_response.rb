@@ -27,6 +27,14 @@ module ActiveMerchant
           
         end
         
+        def method_missing :name
+          begin
+            @params[name.to_s]
+          rescue
+            raise AttributenotFound
+          end
+        end
+        
       end
       
       class AdaptivePaypalErrorResponse

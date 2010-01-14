@@ -1,5 +1,7 @@
 class ConfigDoesNotExist < StandardError; end;
 
+class AttributenotFound < StandardError; end;
+
 class PaypalAdaptivePaymentsApiError < StandardError
   
   attr_reader :response
