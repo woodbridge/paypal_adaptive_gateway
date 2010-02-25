@@ -167,7 +167,8 @@ module ActiveMerchant #:nodoc:
       
       def build_preapproval_payment options
         opts = {
-          :currency_code => "USD"
+          :currency_code => "USD",
+          :start_date => DateTime.current
         }.update(options)
         
         @xml = ''
@@ -181,8 +182,8 @@ module ActiveMerchant #:nodoc:
           end
           
           # required preapproval fields
-          x.endingDate opts[:end_date]
-          x.startingDate opts[:start_date]
+          x.endingDate opts[:end_date].strftime("%Y-%m-%dT%H%%3a%M%%3a%S")
+          x.startingDate opts[:start_date].strftime("%Y-%m-%dT%H%%3a%M%%3a%S")
           x.maxTotalAmountOfAllPayments opts[:max_amount]
           x.currencyCode opts[:currency_code]
           x.cancelUrl opts[:cancel_url]
