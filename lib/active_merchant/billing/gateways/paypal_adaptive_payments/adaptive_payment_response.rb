@@ -21,11 +21,7 @@ module ActiveMerchant
         
         def ack
           @params['responseEnvelope']['ack']
-        end
-        
-        def address
-          
-        end        
+        end    
         
         def method_missing name
           begin
