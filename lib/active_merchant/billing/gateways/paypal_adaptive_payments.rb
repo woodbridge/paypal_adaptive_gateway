@@ -1,6 +1,8 @@
 dir = File.dirname(__FILE__)
 require dir + '/paypal_adaptive_payments/exceptions.rb'
 require dir + '/paypal_adaptive_payments/adaptive_payment_response.rb'
+require dir + '/paypal_adaptive_payments/ext.rb'
+require dir + '/paypal_adaptive_payments/version.rb'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
