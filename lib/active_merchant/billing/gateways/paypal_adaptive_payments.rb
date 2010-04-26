@@ -6,7 +6,7 @@ require dir + '/paypal_adaptive_payments/version.rb'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
-    class PaypalAdaptivePaymentGateway < Gateway # :nodoc
+    class PaypalAdaptivePaymentGateway < Gateway # :nodoc:
       
       include AdaptivePaymentResponses
       
@@ -35,23 +35,40 @@ module ActiveMerchant #:nodoc:
       end 
       
       def pay(options)
-        commit('Pay', build_adaptive_payment_pay_request(options))
+        commit 'Pay', build_adaptive_payment_pay_request(options)
       end                       
     
       def details_for_payment options
-        commit('PaymentDetails', build_adaptive_payment_details_request(options))
+        commit 'PaymentDetails', build_adaptive_payment_details_request(options)
       end
       
       def refund options
-        commit('Refund', build_adaptive_refund_details(options))
+        commit 'Refund', build_adaptive_refund_details(options)
       end
-      
+
+      # Send a preapproval request to pay pal
+      #
+      # ==== Options
+      #
+      # * +:end_date+ - _xs:datetime_ The ending date
+      # * +:start_date+ - _xs:datetime_ The start date (defaults: current)
+      # * +:max_amount+ - _xs:decimal_ The preapproved maximum total amount of all payments.
+      # * +:currency_code+ - The currency code (defaults: USD)
+      # * +:cancel_url+ - URL to redirect the sender’s browser to after canceling the preapproval
+      # * +:return_url+ - URL to redirect the sender’s browser to after the sender has logged into PayPal and confirmed the preapproval
+      # * +:notify_url+ - The URL to which you want all IPN messages for this preapproval to be sent. (Optional)
+      #
+      # To get more details on fields see +Paypal PreApproval API+ at https://www.x.com/docs/DOC-1419
       def preapprove_payment options
-        commit('Preapproval', build_preapproval_payment(options))
+        commit 'Preapproval', build_preapproval_payment(options)
       end
       
-      def preapproval_details_for
-        commit('PreapprovalDetails', build_preapproval_details(options))
+      def preapproval_details_for options
+        commit 'PreapprovalDetails', build_preapproval_details(options)
+      end
+      
+      def convert_currency  options
+        commit 'ConvertCurrency', build_currency_conversion(options)
       end
       
       #debug method, provides an easy to use debug method for the class
@@ -151,13 +168,32 @@ module ActiveMerchant #:nodoc:
       end
       
       def build_preapproval_payment options
+        opts = {
+          :currency_code => "USD",
+          :start_date => DateTime.current
+        }.update(options)
+        
         @xml = ''
         xml = Builder::XmlMarkup.new :target => @xml, :indent => 2
         xml.instruct!
         xml.PreapprovalRequest do |x|
+          # request envelope
           x.requestEnvelope do |x|
             x.detailLevel 'ReturnAll'
             x.errorLanguage opts[:error_language] ||= 'en_US'
+          end
+          
+          # required preapproval fields
+          x.endingDate opts[:end_date].strftime("%Y-%m-%dT%H%%3a%M%%3a%S")
+          x.startingDate opts[:start_date].strftime("%Y-%m-%dT%H%%3a%M%%3a%S")
+          x.maxTotalAmountOfAllPayments opts[:max_amount]
+          x.currencyCode opts[:currency_code]
+          x.cancelUrl opts[:cancel_url]
+          x.returnUrl opts[:return_url]
+          
+          # notify url
+          if opts[:notify_url]
+            x.ipnNotificationUrl opts[:notify_url]
           end
         end
       end
@@ -180,7 +216,7 @@ module ActiveMerchant #:nodoc:
         @xml = ''
         xml = Builder::XmlMarkup.new :target => @xml, :indent => 2
         xml.instruct!
-        xml.PayRequest do |x|
+        xml.ConvertCurrencyRequest do |x|
           x.requestEnvelope do |x|
             x.detailLevel 'ReturnAll'
             x.errorLanguage opts[:error_language] ||= 'en_US'

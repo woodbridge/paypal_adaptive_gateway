@@ -21,12 +21,25 @@ module ActiveMerchant
         
         def ack
           @params['responseEnvelope']['ack']
-        end
+        end    
         
-        def address
-          
+        def method_missing name
+          begin
+            @params[name.to_s]
+          rescue
+            raise AttributenotFound
+          end
         end
-        
+                  
+        def [](key)
+          return @params[key] if @params.include? key
+          raise AttributenotFound
+        end
+
+        def status
+          @params['status']
+        end
+
       end
       
       class AdaptivePaypalErrorResponse
