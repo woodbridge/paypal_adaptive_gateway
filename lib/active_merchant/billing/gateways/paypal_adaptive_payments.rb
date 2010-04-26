@@ -259,7 +259,7 @@ module ActiveMerchant #:nodoc:
           "X-PAYPAL-SECURITY-SIGNATURE" => @config[:signature],
           "X-PAYPAL-APPLICATION-ID" => @config[:appid]
         }
-        build_url action
+        url action
         request = Net::HTTP::Post.new(@url.path)
         request.body = @xml
         headers.each_pair { |k,v| request[k] = v }
@@ -277,7 +277,7 @@ module ActiveMerchant #:nodoc:
         Base.gateway_mode == :test
       end
       
-      def build_url action
+      def url action
         @url = URI.parse(endpoint_url + action)
       end
       
