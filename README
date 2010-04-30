@@ -4,17 +4,16 @@ Supports payments, preapprovals, refunds and currency conversions
 
 Requirements:
 
-  .Rails
+  .Rails 2.3.x
   .Json
   .Builder
-  .ActiveMerchant
+  .ActiveMerchant 1.5.x
 
 to install
 
-  <code>
+    git clone git://github.com/lamp/paypal_adaptive_gateway.git
     cd /path/to/paypal_adaptive_gateway
     script/install /path/to/active/merchant
-  </code>
   
 to use
 
@@ -49,7 +48,9 @@ to use
       redirect_to response.redirect_url_for
     end
     
+    set the :primary flag to false for each recipient for a split payment
+    
   to debug
   
-    use either gateway.debug or response.debug
+    use either gateway.debug or response.debug this gives you the json response, the xml sent and the url it was posted to. 
   
