@@ -12,4 +12,4 @@ plugin_dir = Dir.getwd
 path = '/lib/active_merchant/billing/gateways/'
 
 FileUtils.mkdir_p install_directory.path + path if not File.directory? install_directory.path + path
-FileUtils.cp_r ["#{plugin_dir}#{path}paypal_adaptive_payments.rb", "#{plugin_dir}#{path}paypal_adaptive_payments/"], install_directory.path + path
+FileUtils.cp_r ["#{plugin_dir}#{path}paypal_adaptive_payment.rb", "#{plugin_dir}#{path}paypal_adaptive_payments/"], install_directory.path + path

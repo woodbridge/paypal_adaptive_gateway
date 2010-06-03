@@ -2,6 +2,7 @@ dir = File.dirname(__FILE__)
 require dir + '/paypal_adaptive_payments/exceptions.rb'
 require dir + '/paypal_adaptive_payments/adaptive_payment_response.rb'
 require dir + '/paypal_adaptive_payments/ext.rb'
+require dir + '/paypal_adaptive_payments/utils.rb'
 require dir + '/paypal_adaptive_payments/version.rb'
 
 module ActiveMerchant #:nodoc:
@@ -9,6 +10,7 @@ module ActiveMerchant #:nodoc:
     class PaypalAdaptivePaymentGateway < Gateway # :nodoc:
       
       include AdaptivePaymentResponses
+      include AdaptiveUtils
       
       TEST_URL = 'https://svcs.sandbox.paypal.com/AdaptivePayments/'
       LIVE_URL = 'https://svcs.paypal.com/AdaptivePayments/'
@@ -106,7 +108,7 @@ module ActiveMerchant #:nodoc:
             opts[:receiver_list].each do |receiver|
               x.receiver do |x|
                 x.email receiver[:email]
-                x.amount receiver[:amount]
+                x.amount currency_to_two_places(receiver[:amount])
                 x.primary receiver[:primary] if receiver[:primary]
                 x.paymentType receiver[:payment_type] ||= 'GOODS'
                 x.invoiceId receiver[:invoice_id] if receiver[:invoice_id]
