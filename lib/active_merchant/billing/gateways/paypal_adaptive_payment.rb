@@ -95,7 +95,7 @@ module ActiveMerchant #:nodoc:
             x.detailLevel 'ReturnAll'
             x.errorLanguage opts[:error_language] ||= 'en_US'
           end
-          x.actionType 'PAY'
+          x.actionType opts[:pay_primary] ? 'PAY_PRIMARY' : 'PAY'
           x.cancelUrl opts[:cancel_url]
           x.returnUrl opts[:return_url]
           if opts[:notify_url]
@@ -104,6 +104,9 @@ module ActiveMerchant #:nodoc:
           x.memo opts[:memo] if opts[:memo]
           x.pin opts[:pin] if opts[:pin]
           x.currencyCode opts[:currency_code] ||= 'USD'
+          if opts[:sender_email]
+            x.senderEmail opts[:sender_email]
+          end
           x.receiverList do |x|
             opts[:receiver_list].each do |receiver|
               x.receiver do |x|
@@ -165,7 +168,7 @@ module ActiveMerchant #:nodoc:
               end
             end
           end
-          x.feesPayer opts[:fees_payer] ||= 'EACHRECEIVER'
+          x.feesPayer options[:fees_payer] ||= 'EACHRECEIVER'
         end
       end
       
@@ -192,6 +195,12 @@ module ActiveMerchant #:nodoc:
           x.currencyCode opts[:currency_code]
           x.cancelUrl opts[:cancel_url]
           x.returnUrl opts[:return_url]
+
+          #optional preapproval fields
+          x.maxAmountPerPayment opts[:max_amount_per_payment] unless opts[:max_amount_per_payment].blank?
+          x.maxNumberOfPayments opts[:max_number_of_payments] unless opts[:max_number_of_payments].blank?
+          x.memo opts[:memo] unless opts[:memo].blank?
+
           
           # notify url
           if opts[:notify_url]
