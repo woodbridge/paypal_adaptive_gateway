@@ -38,7 +38,11 @@ module ActiveMerchant #:nodoc:
       
       def pay(options)
         commit 'Pay', build_adaptive_payment_pay_request(options)
-      end                       
+      end
+
+      def execute_payment(options)
+        commit 'ExecutePayment', build_adaptive_payment_execute_request(options)
+      end
     
       def details_for_payment options
         commit 'PaymentDetails', build_adaptive_payment_details_request(options)
@@ -119,6 +123,19 @@ module ActiveMerchant #:nodoc:
             end
           end
           x.feesPayer opts[:fees_payer] ||= 'EACHRECEIVER'
+        end
+      end
+
+      def build_adaptive_payment_execute_request opts
+        @xml = ''
+        xml = Builder::XmlMarkup.new :target => @xml, :indent => 2
+        xml.instruct!
+        xml.ExecutePaymentRequest do |x|          
+          x.requestEnvelope do |x|
+            x.detailLevel 'ReturnAll'
+            x.errorLanguage opts[:error_language] ||= 'en_US'
+          end
+          x.payKey opts[:paykey]
         end
       end
       
