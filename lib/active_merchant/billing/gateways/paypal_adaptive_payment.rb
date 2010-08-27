@@ -105,6 +105,7 @@ module ActiveMerchant #:nodoc:
           if opts[:notify_url]
             x.ipnNotificationUrl opts[:notify_url]
           end
+          x.trackingId opts[:tracking_id] if opts[:tracking_id]
           x.memo opts[:memo] if opts[:memo]
           x.pin opts[:pin] if opts[:pin]
           x.currencyCode opts[:currency_code] ||= 'USD'
