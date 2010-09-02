@@ -47,6 +47,22 @@ module ActiveMerchant
           @params['status']
         end
 
+        def refund_status
+          @params["refundInfoList"]["refundInfo"].first["refundStatus"]
+        end
+
+        def execute_status
+          @params['paymentExecStatus']
+        end
+
+        def refund_complete?
+          refund_status == 'REFUNDED' || refund_status == 'ALREADY_REVERSED_OR_REFUNDED'
+        end
+
+        def execute_complete?
+          execute_status == 'COMPLETED'
+        end
+
       end
       
       class AdaptivePaypalErrorResponse

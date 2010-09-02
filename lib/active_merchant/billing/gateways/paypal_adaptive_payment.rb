@@ -172,8 +172,6 @@ module ActiveMerchant #:nodoc:
           if options[:tracking_id]
             x.trackingId options[:tracking_id]
           end
-          x.cancelUrl options[:cancel_url]
-          x.returnUrl options[:return_url]
           x.currencyCode options[:currency_code] ||= 'USD'
           x.receiverList do |x|
             options[:receiver_list].each do |receiver|
@@ -186,7 +184,6 @@ module ActiveMerchant #:nodoc:
               end
             end
           end
-          x.feesPayer options[:fees_payer] ||= 'EACHRECEIVER'
         end
       end
       
