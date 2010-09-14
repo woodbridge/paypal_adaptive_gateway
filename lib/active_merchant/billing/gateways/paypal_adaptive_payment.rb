@@ -104,6 +104,7 @@ module ActiveMerchant #:nodoc:
           x.memo opts[:memo] if opts[:memo]
           x.pin opts[:pin] if opts[:pin]
           x.currencyCode opts[:currency_code] ||= 'USD'
+          x.senderEmail opts[:senders_email] if opts[:senders_email]
           x.receiverList do |x|
             opts[:receiver_list].each do |receiver|
               x.receiver do |x|
