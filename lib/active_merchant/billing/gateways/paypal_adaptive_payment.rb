@@ -38,7 +38,11 @@ module ActiveMerchant #:nodoc:
       
       def pay(options)
         commit 'Pay', build_adaptive_payment_pay_request(options)
-      end                       
+      end
+
+      def execute_payment(options)
+        commit 'ExecutePayment', build_adaptive_payment_execute_request(options)
+      end
     
       def details_for_payment options
         commit 'PaymentDetails', build_adaptive_payment_details_request(options)
@@ -95,7 +99,7 @@ module ActiveMerchant #:nodoc:
             x.detailLevel 'ReturnAll'
             x.errorLanguage opts[:error_language] ||= 'en_US'
           end
-          x.actionType 'PAY'
+          x.actionType opts[:pay_primary] ? 'PAY_PRIMARY' : 'PAY'
           x.cancelUrl opts[:cancel_url]
           x.returnUrl opts[:return_url]
           if opts[:notify_url]
@@ -105,6 +109,9 @@ module ActiveMerchant #:nodoc:
           x.memo opts[:memo] if opts[:memo]
           x.pin opts[:pin] if opts[:pin]
           x.currencyCode opts[:currency_code] ||= 'USD'
+          if opts[:sender_email]
+            x.senderEmail opts[:sender_email]
+          end
           x.receiverList do |x|
             opts[:receiver_list].each do |receiver|
               x.receiver do |x|
@@ -117,6 +124,19 @@ module ActiveMerchant #:nodoc:
             end
           end
           x.feesPayer opts[:fees_payer] ||= 'EACHRECEIVER'
+        end
+      end
+
+      def build_adaptive_payment_execute_request opts
+        @xml = ''
+        xml = Builder::XmlMarkup.new :target => @xml, :indent => 2
+        xml.instruct!
+        xml.ExecutePaymentRequest do |x|          
+          x.requestEnvelope do |x|
+            x.detailLevel 'ReturnAll'
+            x.errorLanguage opts[:error_language] ||= 'en_US'
+          end
+          x.payKey opts[:paykey]
         end
       end
       
@@ -152,8 +172,6 @@ module ActiveMerchant #:nodoc:
           if options[:tracking_id]
             x.trackingId options[:tracking_id]
           end
-          x.cancelUrl options[:cancel_url]
-          x.returnUrl options[:return_url]
           x.currencyCode options[:currency_code] ||= 'USD'
           x.receiverList do |x|
             options[:receiver_list].each do |receiver|
@@ -166,7 +184,6 @@ module ActiveMerchant #:nodoc:
               end
             end
           end
-          x.feesPayer opts[:fees_payer] ||= 'EACHRECEIVER'
         end
       end
       
@@ -187,12 +204,18 @@ module ActiveMerchant #:nodoc:
           end
           
           # required preapproval fields
-          x.endingDate opts[:end_date].strftime("%Y-%m-%dT%H%%3a%M%%3a%S")
-          x.startingDate opts[:start_date].strftime("%Y-%m-%dT%H%%3a%M%%3a%S")
+          x.endingDate opts[:end_date].strftime("%Y-%m-%dT%H:%M:%S%Z")
+          x.startingDate opts[:start_date].strftime("%Y-%m-%dT%H:%M:%S%Z")
           x.maxTotalAmountOfAllPayments opts[:max_amount]
           x.currencyCode opts[:currency_code]
           x.cancelUrl opts[:cancel_url]
           x.returnUrl opts[:return_url]
+
+          #optional preapproval fields
+          x.maxAmountPerPayment opts[:max_amount_per_payment] unless opts[:max_amount_per_payment].blank?
+          x.maxNumberOfPayments opts[:max_number_of_payments] unless opts[:max_number_of_payments].blank?
+          x.memo opts[:memo] unless opts[:memo].blank?
+
           
           # notify url
           if opts[:notify_url]

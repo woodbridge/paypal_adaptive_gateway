@@ -4,19 +4,26 @@ module ActiveMerchant
       
       class AdaptivePaypalSuccessResponse
         
-        REDIRECT_URL = 'https://www.paypal.com/webscr?cmd=_ap-payment&paykey='
-        TEST_REDIRECT_URL = 'https://www.sandbox.paypal.com/cgi-bin/webscr?cmd=_ap-payment&paykey='
+        BASE_REDIRECT_URL = 'https://www.paypal.com/webscr?cmd='
+        TEST_BASE_REDIRECT_URL = 'https://www.sandbox.paypal.com/cgi-bin/webscr?cmd='
+        PAY_COMMAND = '_ap-payment&paykey='
+        PREAPPROVAL_COMMAND = '_ap-preapproval&preapprovalkey='
         
-        attr_reader :paykey
+        attr_reader :paykey, :preapprovalkey
         
         def initialize json
           
           @paykey = json['payKey']
+          @preapprovalkey = json['preapprovalKey']
           @params = json
         end
         
         def redirect_url_for
-          Base.gateway_mode == :test ? (TEST_REDIRECT_URL + @paykey) : (REDIRECT_URL + @paykey)
+          (Base.gateway_mode == :test ? TEST_BASE_REDIRECT_URL : BASE_REDIRECT_URL) + PAY_COMMAND + @paykey
+        end
+
+        def redirect_preapproval_url_for
+          (Base.gateway_mode == :test ? TEST_BASE_REDIRECT_URL : BASE_REDIRECT_URL) + PREAPPROVAL_COMMAND + @preapprovalkey
         end
         
         def ack
@@ -38,6 +45,22 @@ module ActiveMerchant
 
         def status
           @params['status']
+        end
+
+        def refund_status
+          @params["refundInfoList"]["refundInfo"].first["refundStatus"]
+        end
+
+        def execute_status
+          @params['paymentExecStatus']
+        end
+
+        def refund_complete?
+          refund_status == 'REFUNDED' || refund_status == 'ALREADY_REVERSED_OR_REFUNDED'
+        end
+
+        def execute_complete?
+          execute_status == 'COMPLETED'
         end
 
       end
