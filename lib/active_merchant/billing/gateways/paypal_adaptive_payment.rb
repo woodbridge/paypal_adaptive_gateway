@@ -87,7 +87,7 @@ module ActiveMerchant #:nodoc:
       #loads config from default file if it is not provided to the constructor
       def load_config
         raise ConfigDoesNotExist if !File.exists?(@config_path);
-        @config.merge! Yaml.load_file(@config_path)[RAILS_ENV].symbolize_keys!
+        @config.merge! Yaml.load_file(@config_path)[Rails.env || RAILS_ENV].symbolize_keys!
       end
       
       def build_adaptive_payment_pay_request opts
