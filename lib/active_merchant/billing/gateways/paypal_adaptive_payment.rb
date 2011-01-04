@@ -258,9 +258,6 @@ module ActiveMerchant #:nodoc:
             end
           end
   end
-	  @@PayPalLog = Logger.new('log\PayPal.log')
-	  @@PayPalLog.info "Refund XML request \n"
-          @@PayPalLog.info "#{@xml}"
       end
       
       def parse json
