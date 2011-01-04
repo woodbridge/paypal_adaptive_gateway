@@ -7,11 +7,11 @@ Requirements:
   .Rails 3.0
   .Json
   .Builder
-  .ActiveMerchant 1.5.x
+  .ActiveMerchant 1.9.x
 
 to install
 
-    git clone https://varsh@github.com/varsh/active_merchant.git
+    git clone git://github.com/lamp/paypal_adaptive_gateway.git
     cd /path/to/paypal_adaptive_gateway
     rails path/to/active/merchant
   
@@ -74,7 +74,7 @@ response = gateway.preapprove_payment(
     :maxNumberOfPayments =>"maxNumberOfPayments"
       )
 
-In the preapproval process:
+In the cancel preapproval process:
 	response = gateway.cancel_preapproval(
 	:preapproval_key =>"preapprovalkey"
       )
