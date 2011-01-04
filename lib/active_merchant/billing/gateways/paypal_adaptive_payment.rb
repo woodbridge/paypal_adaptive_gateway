@@ -27,7 +27,6 @@ module ActiveMerchant #:nodoc:
       
       attr_accessor :config_path
       @config_path = "#{RAILS_ROOT}/config/paypal.yml"
-      #@config_path = "C:/Ruby187/bin/amtest/config/paypal.yml"
       
       def initialize(options = {})
         @config = {}
@@ -125,9 +124,6 @@ module ActiveMerchant #:nodoc:
           end
           x.reverseAllParallelPaymentsOnError opts[:reverse_all_parallel_payments_on_error] || 'false'
          end
-    	  @@PayPalLog = Logger.new('log\PayPal.log')
-	  @@PayPalLog.info "create account XML request \n"
-          @@PayPalLog.info "#{@xml}"
       end
       
       def build_adaptive_payment_details_request opts
@@ -141,9 +137,6 @@ module ActiveMerchant #:nodoc:
           end
           x.payKey opts[:paykey]
           end
-      	  @@PayPalLog = Logger.new('log\PayPal.log')
-	  @@PayPalLog.info "create account XML response \n"
-          @@PayPalLog.info "#{@xml}"
       end
       
       def build_adaptive_refund_details options
@@ -180,9 +173,6 @@ module ActiveMerchant #:nodoc:
           end
           x.feesPayer options[:fees_payer] ||= 'EACHRECEIVER'
 	end
-      	  @@PayPalLog = Logger.new('log\PayPal.log')
-	  @@PayPalLog.info "Refund XML request \n"
-          @@PayPalLog.info "#{@xml}"
       end
       
       def build_preapproval_payment options
@@ -216,9 +206,6 @@ module ActiveMerchant #:nodoc:
             x.ipnNotificationUrl opts[:notify_url]
           end
 	end
-	  @@PayPalLog = Logger.new('log\PayPal.log')
-	  @@PayPalLog.info "Preaproval XML request \n"
-          @@PayPalLog.info "#{@xml}"
       end
       
       def build_preapproval_details options
@@ -265,7 +252,7 @@ module ActiveMerchant #:nodoc:
             end
 	   end
 	  end
-          x.convertoToCurrencyList do |x|
+          x.convertToCurrencyList do |x|
 	      options[:to_currencies].each do |k,v| 
               x.currencyCode "#{v}"
             end
@@ -278,10 +265,7 @@ module ActiveMerchant #:nodoc:
       
       def parse json
         @raw = json
-        resp = JSON.parse json
-	  @@PayPalLog = Logger.new('log\PayPal.log')
-	  @@PayPalLog.info "create account JSON response \n"
-          @@PayPalLog.info "#{@raw }"
+	  resp = JSON.parse json
         if resp['responseEnvelope']['ack'] == 'Failure'
           error = AdaptivePaypalErrorResponse.new(resp)
           raise PaypalAdaptivePaymentsApiError.new(error)
