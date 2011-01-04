@@ -193,8 +193,8 @@ module ActiveMerchant #:nodoc:
           end
           
           # required preapproval fields
-          x.endingDate opts[:end_date]
-          x.startingDate opts[:start_date]
+          x.endingDate opts[:end_date].strftime("%Y-%m-%dT%H%%3a%M%%3a%S")
+          x.startingDate opts[:start_date].strftime("%Y-%m-%dT%H%%3a%M%%3a%S")
           x.maxTotalAmountOfAllPayments opts[:max_amount]
 	  x.maxNumberOfPayments opts[:maxNumberOfPayments]
           x.currencyCode opts[:currency_code]
