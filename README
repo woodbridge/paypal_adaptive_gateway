@@ -11,7 +11,7 @@ Requirements:
 
 to install
 
-    git clone git://github.com/lamp/paypal_adaptive_gateway.git
+    git clone https://varsh@github.com/varsh/active_merchant.git
     cd /path/to/paypal_adaptive_gateway
     rails path/to/active/merchant
   
