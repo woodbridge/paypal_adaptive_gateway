@@ -4,32 +4,84 @@ module ActiveMerchant
       
       class AdaptivePaypalSuccessResponse
         
-        BASE_REDIRECT_URL = 'https://www.paypal.com/webscr?cmd='
-        TEST_BASE_REDIRECT_URL = 'https://www.sandbox.paypal.com/cgi-bin/webscr?cmd='
-        PAY_COMMAND = '_ap-payment&paykey='
-        PREAPPROVAL_COMMAND = '_ap-preapproval&preapprovalkey='
+        REDIRECT_URL = 'https://www.paypal.com/webscr?cmd=_ap-payment&paykey='
+        TEST_REDIRECT_URL = 'https://www.sandbox.paypal.com/cgi-bin/webscr?cmd=_ap-payment&paykey='
         
-        attr_reader :paykey, :preapprovalkey
+        attr_reader :paykey
         
         def initialize json
           
           @paykey = json['payKey']
-          @preapprovalkey = json['preapprovalKey']
           @params = json
         end
         
         def redirect_url_for
-          (Base.gateway_mode == :test ? TEST_BASE_REDIRECT_URL : BASE_REDIRECT_URL) + PAY_COMMAND + @paykey
-        end
-
-        def redirect_preapproval_url_for
-          (Base.gateway_mode == :test ? TEST_BASE_REDIRECT_URL : BASE_REDIRECT_URL) + PREAPPROVAL_COMMAND + @preapprovalkey
+          Base.gateway_mode == :test ? (TEST_REDIRECT_URL + @paykey) : (REDIRECT_URL + @paykey)
         end
         
         def ack
           @params['responseEnvelope']['ack']
-        end    
-        
+	end    
+  
+	def paymentExecStatus
+          @params['paymentExecStatus']
+        end 
+  
+  	def transactionStatus
+          @params['transactionStatus']
+       end
+  
+    	def senderEmail
+          @params['senderEmail']
+        end
+    	def actionType
+          @params['actionType']
+        end
+      	def feesPayer
+          @params['feesPayer']
+        end
+  
+	def currencyCode
+          @params['currencyCode']
+         end
+  
+	def payKey
+          @params['payKey']
+        end 
+  
+  	def correlationId
+          @params['responseEnvelope']['correlationId']
+	end 
+  
+    	def build
+          @params['responseEnvelope']['build']
+	end
+  
+      	def refundInfoList
+		@params['refundInfoList']
+        end
+	
+      	def preapprovalKey
+		@params['preapprovalKey']
+        end        
+	
+      	def curPaymentsAmount
+	 @params['curPaymentsAmount']
+        end 
+	
+	
+      	def status
+		@params['status']
+        end        
+	
+      	def curPeriodAttempts
+	 @params['curPeriodAttempts']
+        end 
+
+      	def approved
+	 @params['approved']
+	end
+ 
         def method_missing name
           begin
             @params[name.to_s]
@@ -47,23 +99,9 @@ module ActiveMerchant
           @params['status']
         end
 
-        def refund_status
-          @params["refundInfoList"]["refundInfo"].first["refundStatus"]
-        end
-
-        def execute_status
-          @params['paymentExecStatus']
-        end
-
-        def refund_complete?
-          refund_status == 'REFUNDED' || refund_status == 'ALREADY_REVERSED_OR_REFUNDED'
-        end
-
-        def execute_complete?
-          execute_status == 'COMPLETED'
-        end
-
       end
+      
+
       
       class AdaptivePaypalErrorResponse
         

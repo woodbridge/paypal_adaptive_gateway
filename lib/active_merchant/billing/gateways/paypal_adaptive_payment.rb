@@ -1,8 +1,10 @@
 dir = File.dirname(__FILE__)
 require dir + '/paypal_adaptive_payments/exceptions.rb'
 require dir + '/paypal_adaptive_payments/adaptive_payment_response.rb'
+require dir + '/paypal_adaptive_payments/ext.rb'
 require dir + '/paypal_adaptive_payments/utils.rb'
 require dir + '/paypal_adaptive_payments/version.rb'
+require 'json/add/rails'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -25,6 +27,7 @@ module ActiveMerchant #:nodoc:
       
       attr_accessor :config_path
       @config_path = "#{RAILS_ROOT}/config/paypal.yml"
+      #@config_path = "C:/Ruby187/bin/amtest/config/paypal.yml"
       
       def initialize(options = {})
         @config = {}
@@ -37,11 +40,7 @@ module ActiveMerchant #:nodoc:
       
       def pay(options)
         commit 'Pay', build_adaptive_payment_pay_request(options)
-      end
-
-      def execute_payment(options)
-        commit 'ExecutePayment', build_adaptive_payment_execute_request(options)
-      end
+      end                       
     
       def details_for_payment options
         commit 'PaymentDetails', build_adaptive_payment_details_request(options)
@@ -68,6 +67,10 @@ module ActiveMerchant #:nodoc:
         commit 'Preapproval', build_preapproval_payment(options)
       end
       
+      def cancel_preapproval options
+        commit 'CancelPreapproval', build_cancel_preapproval(options)
+      end      
+      
       def preapproval_details_for options
         commit 'PreapprovalDetails', build_preapproval_details(options)
       end
@@ -86,7 +89,7 @@ module ActiveMerchant #:nodoc:
       #loads config from default file if it is not provided to the constructor
       def load_config
         raise ConfigDoesNotExist if !File.exists?(@config_path);
-        @config.merge! Yaml.load_file(@config_path)[Rails.env || RAILS_ENV].symbolize_keys!
+        @config.merge! Yaml.load_file(@config_path)[RAILS_ENV].symbolize_keys!
       end
       
       def build_adaptive_payment_pay_request opts
@@ -98,17 +101,17 @@ module ActiveMerchant #:nodoc:
             x.detailLevel 'ReturnAll'
             x.errorLanguage opts[:error_language] ||= 'en_US'
           end
-          x.actionType opts[:pay_primary] ? 'PAY_PRIMARY' : 'PAY'
+          x.actionType 'PAY'
+	  x.senderEmail opts[:senderEmail]
           x.cancelUrl opts[:cancel_url]
           x.returnUrl opts[:return_url]
           if opts[:notify_url]
             x.ipnNotificationUrl opts[:notify_url]
           end
-          x.trackingId opts[:tracking_id] if opts[:tracking_id]
           x.memo opts[:memo] if opts[:memo]
+	  x.feesPayer opts[:feesPayer] if opts[:feesPayer]
           x.pin opts[:pin] if opts[:pin]
           x.currencyCode opts[:currency_code] ||= 'USD'
-          x.senderEmail opts[:senders_email] if opts[:senders_email]
           x.receiverList do |x|
             opts[:receiver_list].each do |receiver|
               x.receiver do |x|
@@ -120,21 +123,11 @@ module ActiveMerchant #:nodoc:
               end
             end
           end
-          x.feesPayer opts[:fees_payer] ||= 'EACHRECEIVER'
-        end
-      end
-
-      def build_adaptive_payment_execute_request opts
-        @xml = ''
-        xml = Builder::XmlMarkup.new :target => @xml, :indent => 2
-        xml.instruct!
-        xml.ExecutePaymentRequest do |x|          
-          x.requestEnvelope do |x|
-            x.detailLevel 'ReturnAll'
-            x.errorLanguage opts[:error_language] ||= 'en_US'
-          end
-          x.payKey opts[:paykey]
-        end
+          x.reverseAllParallelPaymentsOnError opts[:reverse_all_parallel_payments_on_error] || 'false'
+         end
+    	  @@PayPalLog = Logger.new('log\PayPal.log')
+	  @@PayPalLog.info "create account XML request \n"
+          @@PayPalLog.info "#{@xml}"
       end
       
       def build_adaptive_payment_details_request opts
@@ -147,7 +140,10 @@ module ActiveMerchant #:nodoc:
             x.errorLanguage opts[:error_language] ||= 'en_US'
           end
           x.payKey opts[:paykey]
-        end
+          end
+      	  @@PayPalLog = Logger.new('log\PayPal.log')
+	  @@PayPalLog.info "create account XML response \n"
+          @@PayPalLog.info "#{@xml}"
       end
       
       def build_adaptive_refund_details options
@@ -169,6 +165,8 @@ module ActiveMerchant #:nodoc:
           if options[:tracking_id]
             x.trackingId options[:tracking_id]
           end
+          x.cancelUrl options[:cancel_url]
+          x.returnUrl options[:return_url]
           x.currencyCode options[:currency_code] ||= 'USD'
           x.receiverList do |x|
             options[:receiver_list].each do |receiver|
@@ -177,11 +175,14 @@ module ActiveMerchant #:nodoc:
                 x.paymentType receiver[:payment_type] ||= 'GOODS'
                 x.invoiceId receiver[:invoice_id] if receiver[:invoice_id]
                 x.email receiver[:email]
-                
               end
             end
           end
-        end
+          x.feesPayer options[:fees_payer] ||= 'EACHRECEIVER'
+	end
+      	  @@PayPalLog = Logger.new('log\PayPal.log')
+	  @@PayPalLog.info "Refund XML request \n"
+          @@PayPalLog.info "#{@xml}"
       end
       
       def build_preapproval_payment options
@@ -198,27 +199,26 @@ module ActiveMerchant #:nodoc:
           x.requestEnvelope do |x|
             x.detailLevel 'ReturnAll'
             x.errorLanguage opts[:error_language] ||= 'en_US'
+	    x.senderEmail opts[:senderEmail]
           end
           
           # required preapproval fields
-          x.endingDate opts[:end_date].strftime("%Y-%m-%dT%H:%M:%S%Z")
-          x.startingDate opts[:start_date].strftime("%Y-%m-%dT%H:%M:%S%Z")
+          x.endingDate opts[:end_date]
+          x.startingDate opts[:start_date]
           x.maxTotalAmountOfAllPayments opts[:max_amount]
+	  x.maxNumberOfPayments opts[:maxNumberOfPayments]
           x.currencyCode opts[:currency_code]
           x.cancelUrl opts[:cancel_url]
           x.returnUrl opts[:return_url]
-
-          #optional preapproval fields
-          x.maxAmountPerPayment opts[:max_amount_per_payment] unless opts[:max_amount_per_payment].blank?
-          x.maxNumberOfPayments opts[:max_number_of_payments] unless opts[:max_number_of_payments].blank?
-          x.memo opts[:memo] unless opts[:memo].blank?
-
           
           # notify url
           if opts[:notify_url]
             x.ipnNotificationUrl opts[:notify_url]
           end
-        end
+	end
+	  @@PayPalLog = Logger.new('log\PayPal.log')
+	  @@PayPalLog.info "Preaproval XML request \n"
+          @@PayPalLog.info "#{@xml}"
       end
       
       def build_preapproval_details options
@@ -228,12 +228,25 @@ module ActiveMerchant #:nodoc:
         xml.PreapprovalDetailsRequest do |x|
           x.requestEnvelope do |x|
             x.detailLevel 'ReturnAll'
-            x.errorLanguage opts[:error_language] ||= 'en_US'
+            x.errorLanguage options[:error_language] ||= 'en_US'
           end
           x.preapprovalKey options[:preapproval_key]
           x.getBillingAddress options[:get_billing_address] if options[:get_billing_address]
         end
       end
+      
+      def build_cancel_preapproval options
+        @xml = ''
+        xml = Builder::XmlMarkup.new :target => @xml, :indent => 2
+        xml.instruct!
+        xml.PreapprovalDetailsRequest do |x|
+          x.requestEnvelope do |x|
+            x.detailLevel 'ReturnAll'
+            x.errorLanguage options[:error_language] ||= 'en_US'
+          end
+          x.preapprovalKey options[:preapproval_key]
+        end
+      end      
       
       def build_currency_conversion options
         @xml = ''
@@ -242,25 +255,33 @@ module ActiveMerchant #:nodoc:
         xml.ConvertCurrencyRequest do |x|
           x.requestEnvelope do |x|
             x.detailLevel 'ReturnAll'
-            x.errorLanguage opts[:error_language] ||= 'en_US'
+            x.errorLanguage options[:error_language] ||= 'en_US'
           end
           x.baseAmountList do |x|
+	  options[:currency_list].each do |currency|
             x.currency do |x|
-              x.amount options[:amount]
-              x.code options[:currency_code] ||= 'USD'
+              x.amount currency[:amount]
+              x.code currency[:code ]
             end
-          end
+	   end
+	  end
           x.convertoToCurrencyList do |x|
-            options[:currencies].each do |currency|
-              x.currency currency
+	      options[:to_currencies].each do |k,v| 
+              x.currencyCode "#{v}"
             end
           end
-        end
+  end
+	  @@PayPalLog = Logger.new('log\PayPal.log')
+	  @@PayPalLog.info "Refund XML request \n"
+          @@PayPalLog.info "#{@xml}"
       end
       
       def parse json
         @raw = json
         resp = JSON.parse json
+	  @@PayPalLog = Logger.new('log\PayPal.log')
+	  @@PayPalLog.info "create account JSON response \n"
+          @@PayPalLog.info "#{@raw }"
         if resp['responseEnvelope']['ack'] == 'Failure'
           error = AdaptivePaypalErrorResponse.new(resp)
           raise PaypalAdaptivePaymentsApiError.new(error)
