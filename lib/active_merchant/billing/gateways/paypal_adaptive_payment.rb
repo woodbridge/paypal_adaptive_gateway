@@ -197,7 +197,7 @@ module ActiveMerchant #:nodoc:
           x.startingDate opts[:start_date].strftime("%Y-%m-%dT%H%%3a%M%%3a%S")
           x.maxTotalAmountOfAllPayments opts[:max_amount]
 	  x.maxNumberOfPayments opts[:maxNumberOfPayments]
-          x.currencyCode opts[:currency_code]
+          x.currencyCode options[:currency_code]
           x.cancelUrl opts[:cancel_url]
           x.returnUrl opts[:return_url]
           
@@ -264,8 +264,7 @@ module ActiveMerchant #:nodoc:
         @raw = json
 	  resp = JSON.parse json
         if resp['responseEnvelope']['ack'] == 'Failure'
-          error = AdaptivePaypalErrorResponse.new(resp)
-          raise PaypalAdaptivePaymentsApiError.new(error)
+          error = AdaptivePaypalErrorResponse.new(json)
         else
           AdaptivePaypalSuccessResponse.new(resp)
         end
