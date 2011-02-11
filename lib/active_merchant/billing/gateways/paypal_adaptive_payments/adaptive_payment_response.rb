@@ -107,12 +107,32 @@ module ActiveMerchant
         
         def initialize error
           @raw = error
+	  @errlist = ActiveSupport::JSON.decode(error)
         end
             
         def debug
           @raw.inspect
-        end
-        
+	end
+  
+	def ack
+          @raw['responseEnvelope']['ack']
+	end
+  
+	def timestamp	  
+	 @raw['responseEnvelope']['timestamp']
+	end
+ 
+ 	def build
+          @raw['responseEnvelope']['build']
+	end
+  
+	def correlationId	  
+	 @raw['responseEnvelope']['correlationId']
+	end
+ 
+ 	def errormessage	  
+	 @errlist['error']
+	end
       end
       
     end
