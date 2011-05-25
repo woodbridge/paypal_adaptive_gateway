@@ -1,10 +1,13 @@
 dir = File.dirname(__FILE__)
-require dir + '/paypal_adaptive_payments/exceptions.rb'
-require dir + '/paypal_adaptive_payments/adaptive_payment_response.rb'
-require dir + '/paypal_adaptive_payments/ext.rb'
-require dir + '/paypal_adaptive_payments/utils.rb'
-require dir + '/paypal_adaptive_payments/version.rb'
-require 'json/add/rails'
+[
+  '/paypal_adaptive_payments/exceptions.rb',
+  '/paypal_adaptive_payments/adaptive_payment_response.rb',
+  '/paypal_adaptive_payments/ext.rb',
+  '/paypal_adaptive_payments/utils.rb',
+  '/paypal_adaptive_payments/version.rb'
+].each { |f| require File.join(dir, f) }
+
+require 'multi_json'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -25,16 +28,10 @@ module ActiveMerchant #:nodoc:
       # The name of the gateway
       self.display_name = 'Paypal Adaptive Payments'
 
-      attr_accessor :config_path
-      @config_path = "#{Rails.root}/config/paypal.yml"
-
-      def initialize(options = {})
-        @config = {}
-        if options.empty?
-          load_config
-        else
-          @config.merge! options
-        end
+      def initialize(config = {})
+        requires!(config, :login, :password, :signature, :appid)
+        @config = config.dup
+        super
       end
 
       def pay(options)
@@ -84,13 +81,6 @@ module ActiveMerchant #:nodoc:
       end
 
       private
-
-      #loads config from default file if it is not provided to the constructor
-      def load_config
-        raise ConfigDoesNotExist if !File.exists?(@config_path);
-        @config.merge! Yaml.load_file(@config_path)[RAILS_ENV].symbolize_keys!
-      end
-
       def build_adaptive_payment_pay_request(opts)
         @xml = ''
         xml = Builder::XmlMarkup.new :target => @xml, :indent => 2
@@ -262,7 +252,7 @@ module ActiveMerchant #:nodoc:
 
       def parse(json)
         @raw = json
-        resp = JSON.parse(json)
+        resp = MultiJson.decode(json)
         if resp['responseEnvelope']['ack'] == 'Failure'
           error = AdaptivePaypalErrorResponse.new(json)
         else
