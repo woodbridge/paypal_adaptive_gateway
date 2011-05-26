@@ -1,52 +1,64 @@
-#require 'test_helper'
-require File.dirname(__FILE__) + '/test_helper'
+require 'test/unit'
+require 'active_merchant'
+require 'paypal_adaptive_gateway'
+
+ActiveMerchant::Billing::Base.mode = :test
 
 class PaypalAdaptivePaymentTest < Test::Unit::TestCase
   def setup
-    @gateway = PaypalAdaptivePaymentGateway.new(
-       :login => 'platfo_1255077030_biz_api1.gmail.com',
-       :password => '1255077037',
-       :signature => 'Abg0gYcQyxQvnf2HDJkKtA-p6pqhA1k-KTYE0Gcy1diujFio4io5Vqjf',
-       :appid => 'APP-80W284485P519543T'
-               )
+    ActiveMerchant::Billing::Base.mode = :test
+
+    @gateway =
+      ActiveMerchant::Billing::PaypalAdaptivePaymentGateway.new(
+        :login => "platfo_1255077030_biz_api1.gmail.com",
+        :password => "1255077037",
+        :signature => "Abg0gYcQyxQvnf2HDJkKtA-p6pqhA1k-KTYE0Gcy1diujFio4io5Vqjf",
+        :appid => "APP-80W284485P519543T"
+      )
 
     @amount = 100
 
-    @receivers = [@amount, 'receiver@example.com']
-    
-        recipients = [{:email => "platfo_1255612361_per@gmail.com",
-                     :amount => 1},
-                    {:email => "platfo_1255611349_biz@gmail.com",
-                     :amount => 1}
-                     ]
-    
-    @pay_options = {:senderEmail => 'sender@example.com',
-                    :remote_ip => '10.0.0.1',
-                    :return_url => 'http://example.com/return',
-                    :cancel_url => 'http://example.com/cancel',
-		    :receiver_list => recipients
-		    }
+    @receivers = [@amount, "receiver@example.com"]
 
-    @paydetails_options = {
-	:paykey =>"AP-0UD39701TB886051H"
-		    }
-			
-@preapproval_options = {:return_url => 'http://example.com/return',
-        :cancel_url => 'http://example.com/cancel',
-	:senderEmail =>'sender@example.com',
-	:start_date =>"2011-03-19",
-        :end_date =>"2012-02-19",
-	:currency_code =>"USD",
-	:max_amount =>"100",
-	:maxNumberOfPayments =>"10"
-	}
+    recipients =
+      [
+        {:email => "platfo_1255612361_per@gmail.com", :amount => 1},
+        {:email => "platfo_1255611349_biz@gmail.com", :amount => 1}
+      ]
 
-    @refund_options_without_ids = {:remote_ip => '10.0.0.1'}
+    @pay_options = 
+      {
+        :senderEmail => "sender@example.com",
+        :remote_ip => "10.0.0.1",
+        :return_url => "http://example.com/return",
+        :cancel_url => "http://example.com/cancel",
+        :receiver_list => recipients
+      }
 
-    @refund_options_with_ids = {:tracking_id => '12325231231231',
-                                :pay_key => 'AP-13R096665X681474E',
-                                :transaction_id => '123123132133',
-                                :remote_ip => '10.0.0.1'}
+    @paydetails_options = { :paykey => "AP-0UD39701TB886051H" }
+
+    now = Time.now
+    @preapproval_options = 
+      {
+        :return_url => "http://example.com/return",
+        :cancel_url => "http://example.com/cancel",
+        :senderEmail => "sender@example.com",
+        :start_date => now,
+        :end_date => now + (60*60*24) * 180, # 180 days in the future
+        :currency_code => "USD",
+        :max_amount => "100",
+        :maxNumberOfPayments => "10"
+      }
+
+    @refund_options_without_ids = {:remote_ip => "10.0.0.1"}
+
+    @refund_options_with_ids = 
+      {
+        :tracking_id => "12325231231231",
+        :pay_key => "AP-13R096665X681474E",
+        :transaction_id => "123123132133",
+        :remote_ip => "10.0.0.1"
+      }
 
     @pay_key = "AP-2JU68453W94563608"
     @preapproval_key = "PA-13R096665X681474E"
@@ -54,22 +66,22 @@ class PaypalAdaptivePaymentTest < Test::Unit::TestCase
 
   def test_successful_pay
     assert response = @gateway.pay(@pay_options)
-    assert_equal 'Success',"#{response.ack}","Unsuccessfull Transaction"
-    assert_equal 'CREATED',"#{response.paymentExecStatus}"
+    assert_equal "Success","#{response.ack}", "Unsuccessful Transaction"
+    assert_equal "CREATED","#{response.paymentExecStatus}"
   end
-  
- def test_successful_preapproval
-	 assert response = @gateway.preapprove_payment(@preapproval_options)
-	 assert_equal 'Success',"#{response.ack}","Unsuccessfull Transaction"
- end
- 
+
   def test_successful_paydetails
-	 assert response = @gateway.details_for_payment(@paydetails_options)
-	 assert_equal 'Success',"#{response.ack}","Unsuccessfull Transaction"
- end
- 
+    assert response = @gateway.details_for_payment(@paydetails_options)
+    assert_equal "Success","#{response.ack}", "Unsuccessful Transaction"
+  end
+
+  def test_successful_preapproval
+    assert response = @gateway.preapprove_payment(@preapproval_options)
+    assert_equal "Success","#{response.ack}", "Unsuccessful Transaction"
+  end
+
   private
-  
+
   def successful_pay_response_json
     <<-RESPONSE
   {"responseEnvelope":{"timestamp":"2009-08-19T20:06:37.422-07:00","ack":"Success","correlationId":"4831666d56952","build":"1011828"},"payKey":"AP-13R096665X681474E","paymentExecStatus":"COMPLETED"}

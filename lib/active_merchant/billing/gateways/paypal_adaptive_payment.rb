@@ -34,15 +34,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def pay(options)
-        commit 'Pay', build_adaptive_payment_pay_request(options)
+        commit('Pay', build_adaptive_payment_pay_request(options))
       end
 
       def details_for_payment(options)
-        commit 'PaymentDetails', build_adaptive_payment_details_request(options)
+        commit('PaymentDetails', build_adaptive_payment_details_request(options))
       end
 
       def refund(options)
-        commit 'Refund', build_adaptive_refund_details(options)
+        commit('Refund', build_adaptive_refund_details(options))
       end
 
       # Send a preapproval request to pay pal
@@ -59,19 +59,19 @@ module ActiveMerchant #:nodoc:
       #
       # To get more details on fields see +Paypal PreApproval API+ at https://www.x.com/docs/DOC-1419
       def preapprove_payment(options)
-        commit 'Preapproval', build_preapproval_payment(options)
+        commit('Preapproval', build_preapproval_payment(options))
       end
 
       def cancel_preapproval(options)
-        commit 'CancelPreapproval', build_cancel_preapproval(options)
+        commit('CancelPreapproval', build_cancel_preapproval(options))
       end
 
       def preapproval_details_for(options)
-        commit 'PreapprovalDetails', build_preapproval_details(options)
+        commit('PreapprovalDetails', build_preapproval_details(options))
       end
 
       def convert_currency(options)
-        commit 'ConvertCurrency', build_currency_conversion(options)
+        commit('ConvertCurrency', build_currency_conversion(options))
       end
 
       #debug method, provides an easy to use debug method for the class
@@ -182,18 +182,16 @@ module ActiveMerchant #:nodoc:
           end
 
           # required preapproval fields
-          x.endingDate opts[:end_date].strftime("%Y-%m-%dT%H%%3a%M%%3a%S")
-          x.startingDate opts[:start_date].strftime("%Y-%m-%dT%H%%3a%M%%3a%S")
+          x.endingDate opts[:end_date].strftime("%Y-%m-%dT%H:%M:%S")
+          x.startingDate opts[:start_date].strftime("%Y-%m-%dT%H:%M:%S")
           x.maxTotalAmountOfAllPayments opts[:max_amount]
-          x.maxNumberOfPayments opts[:maxNumberOfPayments]
+          x.maxNumberOfPayments opts[:maxNumberOfPayments] if opts.has_key?(:maxNumberOfPayments)
           x.currencyCode options[:currency_code]
           x.cancelUrl opts[:cancel_url]
           x.returnUrl opts[:return_url]
 
           # notify url
-          if opts[:notify_url]
-            x.ipnNotificationUrl opts[:notify_url]
-          end
+          x.ipnNotificationUrl opts[:notify_url] if opts.has_key?(:notify_url)
         end
       end
 
