@@ -32,7 +32,7 @@ module ActiveMerchant
       end
 
       def timestamp
-        response_envelope.ack
+        response_envelope.timestamp
       end
 
       def build
