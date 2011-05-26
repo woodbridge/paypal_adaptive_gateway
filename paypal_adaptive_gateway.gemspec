@@ -18,5 +18,5 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
 
   s.add_runtime_dependency 'multi_json', '~> 1.0.0'
-  s.add_runtime_dependency 'activemerchant', '~> 1.9.0'
+  s.add_runtime_dependency 'activemerchant', '~> 1.15.0'
 end
