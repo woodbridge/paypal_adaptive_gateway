@@ -1,1 +1,1 @@
-require 'active_merchant/billing/gateways/paypal_adaptive_payment'
+require 'active_merchant/billing/gateways/paypal_adaptive_payment_gateway'

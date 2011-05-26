@@ -19,4 +19,5 @@ Gem::Specification.new do |s|
 
   s.add_runtime_dependency 'multi_json', '~> 1.0.0'
   s.add_runtime_dependency 'activemerchant', '~> 1.15.0'
+  s.add_runtime_dependency 'rash', '~> 0.3.0'
 end

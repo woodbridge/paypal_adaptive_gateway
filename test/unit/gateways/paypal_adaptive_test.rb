@@ -66,18 +66,18 @@ class PaypalAdaptivePaymentTest < Test::Unit::TestCase
 
   def test_successful_pay
     assert response = @gateway.pay(@pay_options)
-    assert_equal "Success","#{response.ack}", "Unsuccessful Transaction"
-    assert_equal "CREATED","#{response.paymentExecStatus}"
+    assert_equal true, response.success?, "Unsuccessful Transaction"
+    assert_equal "CREATED","#{response.payment_exec_status}"
   end
 
   def test_successful_paydetails
     assert response = @gateway.details_for_payment(@paydetails_options)
-    assert_equal "Success","#{response.ack}", "Unsuccessful Transaction"
+    assert_equal true, response.success?, "Unsuccessful Transaction"
   end
 
   def test_successful_preapproval
     assert response = @gateway.preapprove_payment(@preapproval_options)
-    assert_equal "Success","#{response.ack}", "Unsuccessful Transaction"
+    assert_equal true, response.success?, "Unsuccessful Transaction"
   end
 
   private

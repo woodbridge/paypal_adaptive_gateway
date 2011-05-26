@@ -1,18 +1,14 @@
 dir = File.dirname(__FILE__)
 [
-  '/paypal_adaptive_payments/exceptions.rb',
-  '/paypal_adaptive_payments/adaptive_payment_response.rb',
+  '/paypal_adaptive_payments/paypal_adaptive_payment_response.rb',
   '/paypal_adaptive_payments/ext.rb',
   '/paypal_adaptive_payments/utils.rb'
 ].each { |f| require File.join(dir, f) }
-
-require 'multi_json'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PaypalAdaptivePaymentGateway < Gateway # :nodoc:
 
-      include AdaptivePaymentResponses
       include AdaptiveUtils
 
       TEST_URL = 'https://svcs.sandbox.paypal.com/AdaptivePayments/'
@@ -76,7 +72,7 @@ module ActiveMerchant #:nodoc:
 
       #debug method, provides an easy to use debug method for the class
       def debug
-        "Url: #{@url}\n\n JSON: #{@xml} \n\n Raw: #{@raw}"
+        "Url: #{@url}\n\n Request: #{@xml} \n\n Response: #{@raw}"
       end
 
       private
@@ -247,18 +243,8 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def parse(json)
-        @raw = json
-        resp = MultiJson.decode(json)
-        if resp['responseEnvelope']['ack'] == 'Failure'
-          error = AdaptivePaypalErrorResponse.new(json)
-        else
-          AdaptivePaypalSuccessResponse.new(resp)
-        end
-      end
-
       def commit(action, data)
-        @response = parse(post_through_ssl(action, data))
+        @response = PaypalAdaptivePaymentResponse.new(post_through_ssl(action, data))
       end
 
       def post_through_ssl(action, parameters = {})
@@ -270,7 +256,7 @@ module ActiveMerchant #:nodoc:
           "X-PAYPAL-SECURITY-SIGNATURE" => @config[:signature],
           "X-PAYPAL-APPLICATION-ID" => @config[:appid]
         }
-        url action
+        action_url(action)
         request = Net::HTTP::Post.new(@url.path)
         request.body = @xml
         headers.each_pair { |k,v| request[k] = v }
@@ -288,7 +274,7 @@ module ActiveMerchant #:nodoc:
         Base.gateway_mode == :test
       end
 
-      def url action
+      def action_url(action)
         @url = URI.parse(endpoint_url + action)
       end
 
