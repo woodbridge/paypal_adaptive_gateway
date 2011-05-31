@@ -1,18 +1,30 @@
 dir = File.dirname(__FILE__)
 [
   '/paypal_adaptive_payments/paypal_adaptive_payment_response.rb',
-  '/paypal_adaptive_payments/ext.rb',
-  '/paypal_adaptive_payments/utils.rb'
+  '/paypal_adaptive_payments/ext.rb'
 ].each { |f| require File.join(dir, f) }
+
+require 'money'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PaypalAdaptivePaymentGateway < Gateway # :nodoc:
 
-      include AdaptiveUtils
-
       TEST_URL = 'https://svcs.sandbox.paypal.com/AdaptivePayments/'
       LIVE_URL = 'https://svcs.paypal.com/AdaptivePayments/'
+
+      EMBEDDED_FLOW_TEST_URL = 'https://www.sandbox.paypal.com/webapps/adaptivepayment/flow/pay'
+      EMBEDDED_FLOW_LIVE_URL = 'https://www.paypal.com/webapps/adaptivepayment/flow/pay'
+
+      module FeesPayer
+        OPTIONS = %w(SENDER PRIMARYRECEIVER EACHRECEIVER SECONDARYONLY)
+        OPTIONS.each { |opt| const_set(opt, opt) }
+      end
+
+      module PaymentType
+        TYPES = %w(DIGITALGOODS)
+        TYPES.each { |pt| const_set(pt, pt) }
+      end
 
       # The countries the gateway supports merchants from as 2 digit ISO country codes
       self.supported_countries = ['US']
@@ -70,9 +82,13 @@ module ActiveMerchant #:nodoc:
         commit('ConvertCurrency', build_currency_conversion(options))
       end
 
+      def embedded_flow_url
+        test? ? EMBEDDED_FLOW_TEST_URL : EMBEDDED_FLOW_LIVE_URL
+      end
+
       #debug method, provides an easy to use debug method for the class
       def debug
-        "Url: #{@url}\n\n Request: #{@xml} \n\n Response: #{@raw}"
+        "Url: #{@url}\n\n Request: #{@xml} \n\n Response: #{@response.json}"
       end
 
       private
@@ -86,28 +102,27 @@ module ActiveMerchant #:nodoc:
             x.errorLanguage opts[:error_language] ||= 'en_US'
           end
           x.actionType 'PAY'
-          x.senderEmail opts[:senderEmail]
+          x.senderEmail opts[:sender_email] if opts.key?(:sender_email)
           x.cancelUrl opts[:cancel_url]
           x.returnUrl opts[:return_url]
-          if opts[:notify_url]
-            x.ipnNotificationUrl opts[:notify_url]
-          end
-          x.memo opts[:memo] if opts[:memo]
-          x.feesPayer opts[:feesPayer] if opts[:feesPayer]
+          x.ipnNotificationUrl opts[:ipn_notification_url] if opts[:ipn_notification_url]
+          x.memo opts[:memo] if opts.key?(:memo)
+          x.feesPayer opts[:fees_payer] if opts[:fees_payer]
           x.pin opts[:pin] if opts[:pin]
           x.currencyCode opts[:currency_code] ||= 'USD'
           x.receiverList do |x|
             opts[:receiver_list].each do |receiver|
               x.receiver do |x|
                 x.email receiver[:email]
-                x.amount currency_to_two_places(receiver[:amount])
-                x.primary receiver[:primary] if receiver[:primary]
-                x.paymentType receiver[:payment_type] ||= 'GOODS'
-                x.invoiceId receiver[:invoice_id] if receiver[:invoice_id]
+                x.amount receiver[:amount].to_s
+                x.primary receiver[:primary] if receiver.key?(:primary)
+                x.paymentType receiver[:payment_type] if receiver.key?(:payment_type)
+                x.invoiceId receiver[:invoice_id] if receiver.key?(:invoice_id)
               end
             end
           end
           x.reverseAllParallelPaymentsOnError opts[:reverse_all_parallel_payments_on_error] || 'false'
+          x.trackingId opts[:tracking_id] if opts[:tracking_id]
          end
       end
 
