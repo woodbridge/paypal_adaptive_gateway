@@ -2,8 +2,6 @@ require 'test/unit'
 require 'active_merchant'
 require 'paypal_adaptive_gateway'
 
-ActiveMerchant::Billing::Base.mode = :test
-
 class PaypalAdaptivePaymentTest < Test::Unit::TestCase
   def setup
     ActiveMerchant::Billing::Base.mode = :test
