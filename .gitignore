@@ -9,3 +9,4 @@ pkg/*
 # Vim
 *.un~
 *.swp
+*.swo
